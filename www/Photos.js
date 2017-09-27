@@ -75,6 +75,10 @@ var Photos = {
 		exec(successCallback, errorCallback, "Photos", "image", [photoId]);
 	},
 
+	imageuri: function (photoId, successCallback, errorCallback) {
+		exec(successCallback, errorCallback, "Photos", "imageuri", [photoId]);
+	},
+
 	cancel: function () {
 		exec(null, null, "Photos", "cancel", []);
 	}

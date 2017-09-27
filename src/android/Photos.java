@@ -151,6 +151,15 @@ public class Photos extends CordovaPlugin {
 						}
 					});
 				break;
+			case "imageuri":
+				if (checkPermission(action, data, callbackContext))
+					cordova.getThreadPool().execute(new Runnable() {
+						@Override
+						public void run() {
+							imageuri(data.optString(0, null), callbackContext);
+						}
+					});
+				break;
 			case "cancel":
 				cancel(callbackContext);
 				break;
@@ -331,6 +340,19 @@ public class Photos extends CordovaPlugin {
 			final ByteArrayOutputStream osImage = new ByteArrayOutputStream();
 			image.compress(Bitmap.CompressFormat.JPEG, DEF_QUALITY, osImage);
 			callbackContext.success(osImage.toByteArray());
+		} catch (Exception e) {
+			Log.e(TAG, e.getMessage(), e);
+			callbackContext.error(e.getMessage());
+		}
+	}
+
+	private void imageuri(final String photoId, final CallbackContext callbackContext) {
+		try {
+			if (photoId == null || photoId.isEmpty() || "null".equalsIgnoreCase(photoId))
+				throw new IllegalArgumentException(E_PHOTO_ID_UNDEF);
+			final StringBuilder result = Uri.withAppendedPath(EXTERNAL_CONTENT_URI, photoId).toString();
+			if (result == null) throw new IllegalStateException(E_PHOTO_ID_WRONG);
+			callbackContext.success(result);
 		} catch (Exception e) {
 			Log.e(TAG, e.getMessage(), e);
 			callbackContext.error(e.getMessage());

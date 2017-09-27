@@ -350,7 +350,7 @@ public class Photos extends CordovaPlugin {
 		try {
 			if (photoId == null || photoId.isEmpty() || "null".equalsIgnoreCase(photoId))
 				throw new IllegalArgumentException(E_PHOTO_ID_UNDEF);
-			final StringBuilder result = Uri.withAppendedPath(EXTERNAL_CONTENT_URI, photoId).toString();
+			final String result = Uri.withAppendedPath(EXTERNAL_CONTENT_URI, photoId).toString();
 			if (result == null) throw new IllegalStateException(E_PHOTO_ID_WRONG);
 			callbackContext.success(result);
 		} catch (Exception e) {

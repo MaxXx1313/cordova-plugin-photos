@@ -35,6 +35,7 @@
 
 NSString* const P_ID = @"id";
 NSString* const P_NAME = @"name";
+NSString* const P_URI = @"uri";
 NSString* const P_WIDTH = @"width";
 NSString* const P_HEIGHT = @"height";
 NSString* const P_LAT = @"latitude";
@@ -187,6 +188,7 @@ NSString* const E_PHOTO_BUSY = @"Fetching of photo assets is in progress";
                       return;
                   }
                   NSString* filename = [weakSelf getFilenameForAsset:asset];
+                  
                   if (![weakSelf isNull:filename]) {
                       NSTextCheckingResult* match
                       = [weakSelf.extRegex
@@ -194,34 +196,39 @@ NSString* const E_PHOTO_BUSY = @"Fetching of photo assets is in progress";
                          options:0
                          range:NSMakeRange(0, filename.length)];
                       if (match != nil) {
+                          
                           NSString* name = [filename substringWithRange:[match rangeAtIndex:1]];
                           NSString* ext = [[filename substringWithRange:[match rangeAtIndex:2]] uppercaseString];
                           NSString* type = weakSelf.extType[ext];
+                      
                           if (![weakSelf isNull:type]) {
-                              if (offset <= fetched) {
-                                  NSMutableDictionary<NSString*, NSObject*>* assetItem
-                                  = [NSMutableDictionary dictionaryWithObjectsAndKeys:
-                                     asset.localIdentifier, P_ID,
-                                     name, P_NAME,
-                                     type, P_TYPE,
-                                     [weakSelf.dateFormat stringFromDate:asset.creationDate], P_DATE,
-                                     @((long) (asset.creationDate.timeIntervalSince1970 * 1000)), P_TS,
-                                     @(asset.pixelWidth), P_WIDTH,
-                                     @(asset.pixelHeight), P_HEIGHT,
-                                     nil];
-                                  if (![weakSelf isNull:asset.location]) {
-                                      CLLocationCoordinate2D coord = asset.location.coordinate;
-                                      [assetItem setValue:@(coord.latitude) forKey:P_LAT];
-                                      [assetItem setValue:@(coord.longitude) forKey:P_LON];
+                                  if (offset <= fetched) {
+                                          
+                                          NSMutableDictionary<NSString*, NSObject*>* assetItem
+                                          = [NSMutableDictionary dictionaryWithObjectsAndKeys:
+                                             asset.localIdentifier, P_ID,
+                                             name, P_NAME,
+                                             @"", P_URI,
+                                             type, P_TYPE,
+                                             [weakSelf.dateFormat stringFromDate:asset.creationDate], P_DATE,
+                                             @((long) (asset.creationDate.timeIntervalSince1970 * 1000)), P_TS,
+                                             @(asset.pixelWidth), P_WIDTH,
+                                             @(asset.pixelHeight), P_HEIGHT,
+                                             nil];
+                                          
+                                          if (![weakSelf isNull:asset.location]) {
+                                              CLLocationCoordinate2D coord = asset.location.coordinate;
+                                              [assetItem setValue:@(coord.latitude) forKey:P_LAT];
+                                              [assetItem setValue:@(coord.longitude) forKey:P_LON];
+                                          }
+                                          [result addObject:assetItem];
+                                          if (limit > 0 && result.count >= limit) {
+                                              [weakSelf partial:command withArray:result];
+                                              [result removeAllObjects];
+                                              [NSThread sleepForTimeInterval:interval];
+                                          }
                                   }
-                                  [result addObject:assetItem];
-                                  if (limit > 0 && result.count >= limit) {
-                                      [weakSelf partial:command withArray:result];
-                                      [result removeAllObjects];
-                                      [NSThread sleepForTimeInterval:interval];
-                                  }
-                              }
-                              ++fetched;
+                                  ++fetched;
                           } else [skippedAssets addObject:asset];
                       } else [skippedAssets addObject:asset];
                   } else [skippedAssets addObject:asset];
@@ -233,6 +240,8 @@ NSString* const E_PHOTO_BUSY = @"Fetching of photo assets is in progress";
                   (long)asset.mediaType, (long)asset.mediaSubtypes,
                   (unsigned long)asset.pixelWidth, asset.pixelHeight);
         }];
+        
+        
         weakSelf.photosCommand = nil;
         [weakSelf success:command withArray:result];
     }];
@@ -295,7 +304,7 @@ NSString* const E_PHOTO_BUSY = @"Fetching of photo assets is in progress";
     [self checkPermissionsOf:command andRun:^{
         PHAsset* asset = [weakSelf assetByCommand:command];
         if (asset == nil) return;
-
+        
         PHImageRequestOptions* reqOptions = [[PHImageRequestOptions alloc] init];
         reqOptions.networkAccessAllowed = YES;
         reqOptions.progressHandler = ^(double progress,
@@ -308,7 +317,7 @@ NSString* const E_PHOTO_BUSY = @"Fetching of photo assets is in progress";
                 *stop = YES;
             }
         };
-
+        
         [[PHImageManager defaultManager]
          requestImageDataForAsset:asset
          options:reqOptions
@@ -330,9 +339,28 @@ NSString* const E_PHOTO_BUSY = @"Fetching of photo assets is in progress";
     }];
 }
 
+
+- (void) imageuri:(CDVInvokedUrlCommand*)command {
+    CDVPhotos* __weak weakSelf = self;
+    [self checkPermissionsOf:command andRun:^{
+        PHAsset* asset = [weakSelf assetByCommand:command];
+        if (asset == nil) return;
+        
+        [weakSelf getAssetUrl:asset result:^(NSString* url) {
+            [weakSelf success:command withMessage:url];
+        }];
+    }];
+}
+
 - (void) cancel:(CDVInvokedUrlCommand*)command {
     self.photosCommand = nil;
     [self success:command];
+}
+
+- (void) getAssetUrl:(PHAsset*)asset result:(void(^)(NSString *))completion {
+    [asset requestContentEditingInputWithOptions:[PHContentEditingInputRequestOptions new] completionHandler:^(PHContentEditingInput *contentEditingInput, NSDictionary *info) {
+        completion(contentEditingInput.fullSizeImageURL.absoluteString);
+    }];
 }
 
 #pragma mark - Auxiliary functions

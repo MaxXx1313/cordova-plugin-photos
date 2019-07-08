@@ -22,6 +22,7 @@
  * THE SOFTWARE.
  */
 #import <Cordova/CDV.h>
+#import <Photos/Photos.h>
 
 /*
  * https://developer.apple.com/reference/photos?language=objc
@@ -33,5 +34,6 @@
 - (void) thumbnail:(CDVInvokedUrlCommand*)command;
 - (void) image:(CDVInvokedUrlCommand*)command;
 - (void) cancel:(CDVInvokedUrlCommand*)command;
+- (void) imageuri:(CDVInvokedUrlCommand*)command;
 
 @end

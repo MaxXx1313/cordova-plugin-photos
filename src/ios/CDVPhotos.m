@@ -35,7 +35,6 @@
 
 NSString* const P_ID = @"id";
 NSString* const P_NAME = @"name";
-NSString* const P_URI = @"uri";
 NSString* const P_WIDTH = @"width";
 NSString* const P_HEIGHT = @"height";
 NSString* const P_LAT = @"latitude";
@@ -208,7 +207,6 @@ NSString* const E_PHOTO_BUSY = @"Fetching of photo assets is in progress";
                                           = [NSMutableDictionary dictionaryWithObjectsAndKeys:
                                              asset.localIdentifier, P_ID,
                                              name, P_NAME,
-                                             @"", P_URI,
                                              type, P_TYPE,
                                              [weakSelf.dateFormat stringFromDate:asset.creationDate], P_DATE,
                                              @((long) (asset.creationDate.timeIntervalSince1970 * 1000)), P_TS,

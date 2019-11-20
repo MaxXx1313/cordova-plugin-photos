@@ -7,6 +7,15 @@ Only iOS and Android are supported for now - please feel free to make your pull 
 
 Please note that this plugin deals with _photo images only - not videos or any other media data_.
 
+
+## Installation
+
+Install via repo url directly ( unstable )
+
+    cordova plugin add https://github.com/maxxx1313/cordova-plugin-photos.git
+
+
+
 Contents
 --------
 
